@@ -1,4 +1,4 @@
-import { decorate, observable } from 'mobx'
+import { decorate, observable, action } from 'mobx'
 import firebase from 'firebase/app'
 import 'firebase/auth'
 
@@ -10,23 +10,24 @@ export interface User {
 
 export default class AuthStore {
   user: User | null = null
+  isLoading: boolean = false
   error: any
   notifierStore: NotifierStore
 
   constructor(notifierStore: NotifierStore) {
     this.notifierStore = notifierStore
-
     this.init()
   }
 
-  login() {
-    // AsyncStorage.getItem('user')
-    // .then(data => {
-    //   if (!data) {
-    //     return
-    //   }
-    //   return JSON.parse(data)
-    // })
+  async onLogin(username: string, password: string) {
+    try {
+      this.isLoading = true
+      await firebase.auth().signInWithEmailAndPassword(username, password)
+    } catch (error) {
+      console.error(error)
+    } finally {
+      this.isLoading = true
+    }
   }
 
   onSignInError(error: any) {
@@ -35,25 +36,26 @@ export default class AuthStore {
   }
 
   onAuthStateChanged(user: any) {
+    console.log('onAuthStateChanged')
     this.user = user
     this.error = undefined
   }
 
   init() {
-    firebase.auth().onAuthStateChanged(this.onAuthStateChanged.bind(this))
+    const auth = firebase.auth()
 
-    // AsyncStorage.getItem('user')
-    //   .then(data => {
-    //     if (data) {
-    //       return
-    //     }
-    //     (appContainer.current! as NavigationContainerComponent).dispatch(
-    //       StackActions.replace({ routeName: 'Login' })
-    //     )
-    //   })
+    console.log('auth.currentUser', auth.currentUser)
+
+    auth.onAuthStateChanged(this.onAuthStateChanged.bind(this))
+    this.user = auth.currentUser
   }
 }
 
 decorate(AuthStore, {
   user: observable,
+  isLoading: observable,
+  init: action,
+  onLogin: action,
+  onAuthStateChanged: action,
+  onSignInError: action,
 })

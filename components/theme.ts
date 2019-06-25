@@ -92,6 +92,9 @@ const typographyCollection: TypographyCollection = {
 const typography = (type: string) : Typography => typographyCollection[typographyCollection.default][type]
 const fontSize = (type: string) : number => typography(type).fontSize
 const spacing = (n: number) : number => fontSize('Body') * n
+const colors = {
+  screenBackgroundColor: '#ffffff'
+}
 
 export const ThemeContext = createContext({})
 
@@ -99,4 +102,5 @@ export const theme = {
   fontSize,
   spacing,
   typography,
+  colors,
 }

@@ -30,8 +30,9 @@ const AppContainer = createAppContainer(AppNavigator)
 
 const App: React.FC = () => {
   const appContainer = useRef(null)
+  const { user } = stores.authStore!
+  
   useEffect(() => {
-    const { user } = stores.authStore!
 
     if (!appContainer.current) {
       return
@@ -42,7 +43,8 @@ const App: React.FC = () => {
         StackActions.replace({ routeName: 'Login' })
       )
     }
-  })
+  }, [user])
+
   return (
     <Provider {...stores}>
       <ThemeContext.Provider value={theme}>
