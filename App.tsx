@@ -1,49 +1,55 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- * @flow
- */
+import React, { useRef, useEffect } from 'react'
+import { Provider } from 'mobx-react'
+import {
+  createStackNavigator,
+  createAppContainer,
+  NavigationContainerComponent,
+  StackActions,
+} from 'react-navigation'
+import firebase from 'firebase/app'
 
-import React, {Component} from 'react';
-import {Platform, StyleSheet, Text, View} from 'react-native';
+import { ThemeContext, theme, createStores } from './components'
+import { HomeScreen, LoginScreen } from './components/screens'
+import firebaseConfig from './firebase.config'
 
-const instructions = Platform.select({
-  ios: 'Press Cmd+R to reload,\n' + 'Cmd+D or shake for dev menu',
-  android:
-    'Double tap R on your keyboard to reload,\n' +
-    'Shake or press menu button for dev menu',
-});
+firebase.initializeApp(firebaseConfig)
 
-type Props = {};
-export default class App extends Component<Props> {
-  render() {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.welcome}>🤷‍♂️Welcome to React Native!</Text>
-        <Text style={styles.instructions}>To get started, edit App.js</Text>
-        <Text style={styles.instructions}>{instructions}</Text>
-      </View>
-    );
-  }
+const stores = createStores()
+
+const AppNavigator = createStackNavigator(
+  {
+    Home: HomeScreen,
+    Login: LoginScreen,
+  },
+  {
+    initialRouteName: 'Home'
+  },
+)
+
+const AppContainer = createAppContainer(AppNavigator)
+
+const App: React.FC = () => {
+  const appContainer = useRef(null)
+  useEffect(() => {
+    const { user } = stores.authStore!
+
+    if (!appContainer.current) {
+      return
+    }
+
+    if (!user) {
+      (appContainer.current! as NavigationContainerComponent).dispatch(
+        StackActions.replace({ routeName: 'Login' })
+      )
+    }
+  })
+  return (
+    <Provider {...stores}>
+      <ThemeContext.Provider value={theme}>
+        <AppContainer ref={appContainer} />
+      </ThemeContext.Provider>
+    </Provider>
+  )
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#F5FCFF',
-  },
-  welcome: {
-    fontSize: 20,
-    textAlign: 'center',
-    margin: 10,
-  },
-  instructions: {
-    textAlign: 'center',
-    color: '#333333',
-    marginBottom: 5,
-  },
-});
+export default App
